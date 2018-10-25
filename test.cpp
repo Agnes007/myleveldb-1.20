@@ -9,6 +9,8 @@
 using namespace std;
 
 int main(){
+
+
 	leveldb::DB* db;
 	leveldb::Options options;
 	options.create_if_missing = true;

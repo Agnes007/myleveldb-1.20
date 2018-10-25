@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "db/db_impl.h"
 
 #include <algorithm>
 #include <set>
@@ -11,6 +10,7 @@
 #include <stdio.h>
 #include <vector>
 
+#include "db/db_impl.h"
 #include "db/builder.h"
 #include "db/db_iter.h"
 #include "db/dbformat.h"
@@ -37,6 +37,8 @@
 namespace leveldb {
 
 const int kNumNonTableCacheFiles = 10;
+bool g_Ceph_Mode = true;  
+bool g_Ceph_Mode_KV = true;
 
 // Information kept for every waiting writer
 struct DBImpl::Writer {
@@ -137,7 +139,10 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       bg_compaction_scheduled_(false),
       manual_compaction_(NULL) {
   has_imm_.Release_Store(NULL);
-  c.ceph_conn();
+  if(g_Ceph_Mode){
+    c.ceph_conn();
+  }
+  
   // Reserve ten files or so for other uses and give the rest to TableCache.
   const int table_cache_size = options_.max_open_files - kNumNonTableCacheFiles;
   table_cache_ = new TableCache(dbname_, &options_, table_cache_size);
@@ -148,7 +153,9 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
 
 DBImpl::~DBImpl() {
   // Wait for background work to finish
-	  c.ceph_close();
+  if(g_Ceph_Mode){
+    c.ceph_close();
+  }
   mutex_.Lock();
   shutting_down_.Release_Store(this);  // Any non-NULL value is ok
   while (bg_compaction_scheduled_) {
@@ -1137,18 +1144,21 @@ Status DBImpl::Get(const ReadOptions& options,
     mutex_.Unlock();
     // First look in the memtable, then in the immutable memtable (if any).
     LookupKey lkey(key, snapshot);
-
     if (mem->Get(lkey, value, &s)) {
       // Done
     } else if (imm != NULL && imm->Get(lkey, value, &s)) {
       // Done
     } else {
+      if(g_Ceph_Mode){
         //std::cout<<"###################################"<<std::endl;
         const char* keydata = key.data();
         c.ceph_read(keydata);
-       //s = current->Get(options, lkey, value, &stats);
-      //have_stat_update = true;
+      }else{
+        s = current->Get(options, lkey, value, &stats);
+        have_stat_update = true;
+      }
     }
+   
     mutex_.Lock();
   }
 
@@ -1192,16 +1202,20 @@ void DBImpl::ReleaseSnapshot(const Snapshot* s) {
 
 // Convenience methods
 Status DBImpl::Put(const WriteOptions& o, const Slice& key, const Slice& val) {
-	//std::cout<<"***************************"<<std::endl;
-	const char* okey = key.data();
-	const char* oval = val.data();
-	c.ceph_write(okey,oval);
+	if(g_Ceph_Mode_KV){
+    //std::cout<<"***************************"<<std::endl;
+	  const char* okey = key.data();
+	  const char* oval = val.data();
+	  c.ceph_write(okey,oval);
+  }
 	return DB::Put(o, key, val);
 }
 
 Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
-	const char* okey = key.data();
-	c.ceph_remove(okey);
+	if(g_Ceph_Mode_KV){
+    const char* okey = key.data();
+	  c.ceph_remove(okey);
+  }  
   return DB::Delete(options, key);
 }
 

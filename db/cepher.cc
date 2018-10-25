@@ -19,7 +19,7 @@ void cepher::ceph_conn() {
 	char user_name[] = "client.admin";
 	uint64_t flags;
 
-	/* Initialize the cluster handle with the "ceph" cluster name and "client.admin" user */
+	/* Initialize the cluster handle with the "ceph" cluster name and "client.agnes" user */
 	{
 		ret = cluster.init2(user_name, cluster_name, flags);
 		if (ret < 0) {
@@ -59,7 +59,7 @@ void cepher::ceph_conn() {
 	}
 
 	//librados::IoCtx io_ctx;
-	pool_name = "test0116";
+	pool_name = "test0126";
 
 	{
 		ret = cluster.ioctx_create(pool_name, io_ctx);
@@ -131,7 +131,7 @@ void cepher::ceph_read(const char* key) {
 	if (ret < 0) {
 		std::cerr << "Couldn't read object! error " << ret << std::endl;
 		exit(EXIT_FAILURE);
-	} /*else {
+	}/* {
 		std::cout << "Ceph read object " << key
 				<< " asynchronously with contents.\n" << "key: " << key
 				<< "  val: " << read_buf.c_str() << std::endl;

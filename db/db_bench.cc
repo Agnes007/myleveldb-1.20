@@ -50,15 +50,18 @@ static const char* FLAGS_benchmarks =
     "readrandom,"  // Extra run to allow previous compactions to quiesce
     "readseq,"
     "readreverse,"
+	"readwhilewriting"
+	"deleteseq"
+	"deleterandom"
     //"compact,"
-    "readrandom,"
-    "readseq,"
-    "readreverse,"
-    "fill100K,"
+    //"readrandom,"
+    //"readseq,"
+    //"readreverse,"
+    //"fill100K,"
     //"crc32c,"
     //"snappycomp,"
     //"snappyuncomp,"
-    "acquireload,"
+    //"acquireload,"
     ;
 
 // Number of key/values to place in database
