@@ -39,7 +39,7 @@ namespace leveldb {
 const int kNumNonTableCacheFiles = 10;
 bool g_Ceph_Mode = true;  
 bool g_Ceph_Mode_KV = true;
-
+bool test=0;
 // Information kept for every waiting writer
 struct DBImpl::Writer {
   Status status;
